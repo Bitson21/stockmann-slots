@@ -4,7 +4,9 @@ Klassische Wald-Slotmaschine mit 3 Walzen und einer Gewinnlinie – mit Stockman
 
 ## Spielen
 
-Einfach `index.html` im Browser öffnen (auch auf dem Handy). Keine Installation nötig.
+👉 **https://bitson21.github.io/stockmann-slots/** (auch auf dem Handy)
+
+Oder `index.html` direkt im Browser öffnen. Keine Installation nötig.
 
 - Startguthaben: $1.000, Einsatz: $10 pro Dreh
 - **DREHEN** (oder Leertaste), **Auto** dreht automatisch, **Ton** an/aus
