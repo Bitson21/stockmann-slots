@@ -1,6 +1,6 @@
 # 🌳 Stockmann Slots
 
-Klassische Wald-Slotmaschine mit 3 Walzen und einer Gewinnlinie – mit Stockmann als Bonussymbol. Ich bin Stockmann!
+Klassische Wald-Slotmaschine mit 3 Walzen und 3 Gewinnlinien – mit Stockmann als Bonussymbol. Ich bin Stockmann!
 
 ## Spielen
 
@@ -8,23 +8,24 @@ Klassische Wald-Slotmaschine mit 3 Walzen und einer Gewinnlinie – mit Stockman
 
 Oder `index.html` direkt im Browser öffnen. Keine Installation nötig.
 
-- Startguthaben: $1.000, Einsatz: $10 pro Dreh
+- Startguthaben: $1.000, Einsatz: $10 pro Dreh (für alle 3 Linien zusammen)
 - **DREHEN** (oder Leertaste), **Auto** dreht automatisch, **Ton** an/aus
 
 ## Gewinntabelle
 
-Gewertet wird nur die rote Linie in der Mitte. Der **Joker (WILD)** ersetzt jedes Symbol außer Stockmann.
+3 Gewinnlinien: oben, Mitte und unten. Gewinne gelten **pro Linie**, mehrere Linien können gleichzeitig gewinnen.
+Der **Joker (WILD)** ersetzt jedes Symbol außer Stockmann.
 
-| 3 gleiche | Gewinn |
+| 3 gleiche auf einer Linie | Gewinn |
 |---|---|
 | 3× Stockmann | $100 + Bonusspiel |
-| 3× Joker (WILD) | $100 |
-| 3× Waschbär 🦝 | $80 |
-| 3× Holzstamm 🪵 | $60 |
-| 3× Tanne 🌲 | $40 |
-| 3× Pilz 🍄 | $30 |
-| 3× Eichel 🌰 | $20 |
-| 3× Blatt 🍃 | $10 |
+| 3× Joker (WILD) | $50 |
+| 3× Waschbär 🦝 | $40 |
+| 3× Holzstamm 🪵 | $30 |
+| 3× Tanne 🌲 | $20 |
+| 3× Pilz 🍄 | $15 |
+| 3× Eichel 🌰 | $10 |
+| 3× Blatt 🍃 | $5 |
 
 ## Bonusspiel
 
@@ -43,6 +44,7 @@ Am Ende gibt es eine große Gewinn-Show.
 
 ## Zahlen
 
+- Gewinn bei ca. jedem 5. Dreh
 - Bonus ca. alle 50 Drehs
-- Auszahlungsquote ca. 99,5 %
-- Ein Bonus bringt im Schnitt ca. 47× den Einsatz
+- Auszahlungsquote ca. 99,6 %
+- Ein Bonus bringt im Schnitt ca. 42× den Einsatz, fast jeder Bonus hat Linien-Treffer
