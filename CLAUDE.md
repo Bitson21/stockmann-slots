@@ -29,4 +29,5 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - UI-Texte und Kommentare auf Deutsch.
 - `gesicht.jpg` (Originalfoto) liegt nur lokal und ist per `.gitignore` ausgeschlossen.
-- Änderungen laufen über PRs auf GitHub (Remote `Bitson21/stockmann-slots`, privat).
+- Änderungen laufen über PRs auf GitHub (Remote `Bitson21/stockmann-slots`, öffentlich).
+- Live über GitHub Pages (Branch `main`): https://bitson21.github.io/stockmann-slots/ – jeder Merge auf `main` geht sofort live. Die Seite ist per `<meta name="robots">` für Suchmaschinen gesperrt, weil sie ein Foto einer Privatperson enthält.
