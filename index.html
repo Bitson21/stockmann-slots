@@ -164,7 +164,7 @@
   .glow {
     position: absolute;
     left: 4px; right: 4px;
-    top: var(--cell);
+    top: calc(var(--cell) * var(--row));
     height: var(--cell);
     border-radius: 10px;
     border: 4px solid var(--gold);
@@ -173,8 +173,11 @@
     z-index: 4;
     pointer-events: none;
   }
-  .reel.win .glow { opacity: 1; animation: pulse .6s ease-in-out infinite alternate; }
-  .reel.win .strip .sym:nth-child(2) { animation: bounce .6s ease-in-out infinite alternate; }
+  /* Gewinn auf Reihe 0/1/2 (oben/Mitte/unten) */
+  .reel.win-r0 .glow.r0, .reel.win-r1 .glow.r1, .reel.win-r2 .glow.r2 { opacity: 1; animation: pulse .6s ease-in-out infinite alternate; }
+  .reel.win-r0 .strip .sym:nth-child(1),
+  .reel.win-r1 .strip .sym:nth-child(2),
+  .reel.win-r2 .strip .sym:nth-child(3) { animation: bounce .6s ease-in-out infinite alternate; }
   /* Drama: zwei Stockmänner auf Walze 1 + 2 */
   .reels-window.drama {
     z-index: 6;
@@ -187,13 +190,15 @@
     to   { box-shadow: 0 0 0 5px var(--gold), 0 0 50px 16px rgba(255,209,102,1); }
   }
   @keyframes teaseshake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-1.5px); } 75% { transform: translateX(1.5px); } }
-  .reel.tease-hit .glow {
+  .reel.tease-r0 .glow.r0, .reel.tease-r1 .glow.r1, .reel.tease-r2 .glow.r2 {
     opacity: 1;
     border-color: var(--leaf);
     box-shadow: 0 0 18px var(--leaf), inset 0 0 18px rgba(108,194,74,.6);
     animation: pulse .4s ease-in-out infinite alternate;
   }
-  .reel.tease-hit .strip .sym:nth-child(2) { animation: bounce .4s ease-in-out infinite alternate; }
+  .reel.tease-r0 .strip .sym:nth-child(1),
+  .reel.tease-r1 .strip .sym:nth-child(2),
+  .reel.tease-r2 .strip .sym:nth-child(3) { animation: bounce .4s ease-in-out infinite alternate; }
   .drama-text {
     display: none;
     position: absolute;
@@ -212,26 +217,41 @@
   @keyframes pulse { from { opacity: .55; } to { opacity: 1; } }
   @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.12); } }
 
+  /* 3 Gewinnlinien: --row 0 = oben, 1 = Mitte, 2 = unten (12px = Innenabstand des Walzenfensters) */
   .payline {
     position: absolute;
-    left: 2px; right: 2px;
-    top: 50%;
-    height: 4px;
+    left: 6px; right: 6px;
+    top: calc(12px + var(--cell) * (var(--row) + .5));
+    height: 3px;
     transform: translateY(-50%);
-    background: rgba(230, 57, 70, .85);
-    box-shadow: 0 0 8px rgba(230,57,70,.9);
+    background: rgba(230, 57, 70, .55);
+    box-shadow: 0 0 6px rgba(230,57,70,.6);
     z-index: 5;
     pointer-events: none;
+    transition: background .2s, height .2s;
   }
   .payline::before, .payline::after {
-    content: "";
+    content: attr(data-n);
     position: absolute;
     top: 50%;
-    transform: translateY(-50%);
-    border: 9px solid transparent;
+    width: 18px; height: 18px;
+    margin-top: -9px;
+    border-radius: 50%;
+    background: #e63946;
+    color: #fff;
+    font: 900 11px/18px "Nunito", sans-serif;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,.6);
   }
-  .payline::before { left: -8px; border-left-color: #e63946; }
-  .payline::after  { right: -8px; border-right-color: #e63946; }
+  .payline::before { left: -12px; }
+  .payline::after  { right: -12px; }
+  .payline.win {
+    height: 5px;
+    background: var(--gold);
+    box-shadow: 0 0 14px var(--gold);
+    animation: pulse .5s ease-in-out infinite alternate;
+  }
+  .payline.win::before, .payline.win::after { background: var(--gold); color: #3e2410; }
 
   /* Anzeigen */
   .displays {
@@ -635,10 +655,12 @@
   </div>
 
   <div class="reels-window">
-    <div class="reel" id="reel0"><div class="strip"></div><div class="glow"></div></div>
-    <div class="reel" id="reel1"><div class="strip"></div><div class="glow"></div></div>
-    <div class="reel" id="reel2"><div class="strip"></div><div class="glow"></div></div>
-    <div class="payline"></div>
+    <div class="reel" id="reel0"><div class="strip"></div><div class="glow r0" style="--row:0"></div><div class="glow r1" style="--row:1"></div><div class="glow r2" style="--row:2"></div></div>
+    <div class="reel" id="reel1"><div class="strip"></div><div class="glow r0" style="--row:0"></div><div class="glow r1" style="--row:1"></div><div class="glow r2" style="--row:2"></div></div>
+    <div class="reel" id="reel2"><div class="strip"></div><div class="glow r0" style="--row:0"></div><div class="glow r1" style="--row:1"></div><div class="glow r2" style="--row:2"></div></div>
+    <div class="payline" data-n="1" style="--row:0"></div>
+    <div class="payline" data-n="2" style="--row:1"></div>
+    <div class="payline" data-n="3" style="--row:2"></div>
     <div class="drama-text">🔥 NOCH EIN STOCKMANN …?! 🔥</div>
   </div>
 
@@ -713,19 +735,20 @@
 
 <script>
 // ======================================================
-//  Spiel-Einstellungen (Mathe: ~99,5 % Auszahlung,
-//  Bonus ca. alle 50 Drehs, Gewinn bei ca. 5 % der Drehs im Grundspiel,
-//  ca. 36 % in den Freispielen – der Großteil der Gewinne steckt im Bonus.
-//  Alle Gewinne in „× Einsatz“.)
+//  Spiel-Einstellungen (Mathe: ~99,6 % Auszahlung, 3 Gewinnlinien,
+//  Bonus ca. alle 50 Drehs, Gewinn bei ca. 18 % der Drehs im Grundspiel,
+//  Ø Bonus ca. 42× Einsatz. Alle Gewinne in „× Einsatz“ pro Linie.)
 // ======================================================
 const BET = 10;
 const START_BALANCE = 1000;
+// 3 Gewinnlinien: Reihe 0 = oben, 1 = Mitte, 2 = unten. Der Einsatz gilt für alle 3 Linien zusammen.
+const ROWS = [0, 1, 2];
 
 // Wie oft jedes Symbol auf einer Walze vorkommt (48 Felder pro Walze)
-// Grundspiel: wenige Joker, Gewinne eher selten – Bonus ca. alle 50 Drehs
-const WEIGHTS = { wild: 2, eichel: 8, blatt: 8, pilz: 6, tanne: 5, stamm: 4, rocket: 2, face: 13 };
-// Freispiele: eigene Walzen ohne Stockmann, mit viel mehr Jokern und Blättern → viel mehr Treffer
-const FS_WEIGHTS = { wild: 13, eichel: 9, blatt: 16, pilz: 1, tanne: 3, stamm: 5, rocket: 1 };
+// Grundspiel: 9 Stockmänner pro Walze → Bonus ca. alle 50 Drehs (auf einer der 3 Linien)
+const WEIGHTS = { wild: 2, eichel: 12, blatt: 14, pilz: 3, tanne: 4, stamm: 2, rocket: 2, face: 9 };
+// Freispiele: eigene Walzen ohne Stockmann, mit viel mehr Jokern → viel mehr Treffer
+const FS_WEIGHTS = { wild: 9, eichel: 12, blatt: 16, pilz: 4, tanne: 2, stamm: 3, rocket: 2 };
 
 const SYMBOLS = {
   wild:   { emoji: '🌱', name: 'Joker' },
@@ -738,8 +761,8 @@ const SYMBOLS = {
   face:   { emoji: null, name: 'Stockmann' },
 };
 
-// Gewinne für 3 gleiche Symbole (× Einsatz). Der Joker (WILD) ersetzt jedes normale Symbol.
-const PAY_3 = { wild: 10, rocket: 8, stamm: 6, tanne: 4, pilz: 3, eichel: 2, blatt: 1 };
+// Gewinne für 3 gleiche Symbole auf einer Linie (× Einsatz). Der Joker (WILD) ersetzt jedes normale Symbol.
+const PAY_3 = { wild: 5, rocket: 4, stamm: 3, tanne: 2, pilz: 1.5, eichel: 1, blatt: 0.5 };
 const PAY_3_FACE = 10;    // 3 Gesichter = 10× Einsatz + Bonus (kommt nur im Grundspiel vor)
 
 // Die 5 Stöcke im Bonusspiel (werden jedes Mal neu gemischt)
@@ -783,11 +806,21 @@ function shuffle(arr) {
 }
 
 function makeStrip(weights) {
-  const strip = [];
+  const others = [];
   for (const [sym, count] of Object.entries(weights)) {
-    for (let i = 0; i < count; i++) strip.push(sym);
+    if (sym === 'face') continue;
+    for (let i = 0; i < count; i++) others.push(sym);
   }
-  return shuffle(strip);
+  shuffle(others);
+  const n = others.length + (weights.face || 0);
+  const strip = new Array(n).fill(null);
+  // Stockmänner gleichmäßig verteilen: nie zwei innerhalb von 3 Feldern übereinander.
+  // So zeigt jede Walze höchstens einen Stockmann → höchstens ein Bonus pro Dreh.
+  const faces = weights.face || 0;
+  for (let i = 0; i < faces; i++) strip[Math.round((i * n) / faces)] = 'face';
+  let k = 0;
+  for (let i = 0; i < n; i++) if (!strip[i]) strip[i] = others[k++];
+  return strip;
 }
 
 const reels = [0, 1, 2].map((i) => {
@@ -901,7 +934,16 @@ function evaluate(line) {
   return { pay: 0 };
 }
 
-// Nur zum Testen in der Browser-Konsole: window.__force = ['face','face','face']
+// Alle 3 Linien auswerten. grid[walze] = [oben, Mitte, unten]
+function evaluateSpin(grid) {
+  const lines = ROWS.map((row) => ({ row, ...evaluate([grid[0][row], grid[1][row], grid[2][row]]) }));
+  return {
+    bonusLine: lines.find((l) => l.bonus),
+    wins: lines.filter((l) => !l.bonus && l.pay > 0),
+  };
+}
+
+// Nur zum Testen in der Browser-Konsole: window.__force = ['face','face','face'] (mittlere Linie)
 function pickStop(reel, i) {
   if (window.__force && window.__force[i]) {
     const options = reel.strip.map((s, idx) => (s === window.__force[i] ? idx : -1)).filter((x) => x >= 0);
@@ -934,44 +976,60 @@ async function spin() {
 
   const stops = reels.map((r, i) => pickStop(r, i));
   window.__force = null;
-  const line = stops.map((st, i) => reels[i].strip[st]);
+  const grid = stops.map((st, i) => visible(reels[i], st));
 
-  // Drama: zwei Gesichter auf Walze 1 + 2 → Walze 3 dreht viel länger und bremst langsam
-  const tease = line[0] === 'face' && line[1] === 'face';
+  // Drama: zwei Gesichter auf Walze 1 + 2 in derselben Reihe → Walze 3 dreht viel länger und bremst langsam
+  const teaseRow = ROWS.find((r) => grid[0][r] === 'face' && grid[1][r] === 'face');
+  const tease = teaseRow !== undefined;
   const base = fs ? 650 : 850;
   const durations = [base, base + 300, base + 600 + (tease ? 3000 : 0)];
   const slowStop = 'cubic-bezier(.05,.6,.1,1)';
 
   const done = reels.map((r, i) =>
     animateReel(r, stops[i], durations[i], tease && i === 2 ? slowStop : undefined));
+  // Spannungs-Sound, wenn ein Kopf landet und der Bonus noch möglich ist:
+  // Walze 1 mit Kopf (egal welche Reihe), dann Walze 2 mit Kopf in derselben Reihe.
+  // Ohne Kopf auf Walze 1 gibt es keinen Sound – auch nicht, wenn Walze 2 und 3 Köpfe zeigen.
+  done[0].then(() => { if (grid[0].includes('face')) sound.faceLand(1); });
+  done[1].then(() => { if (tease) sound.faceLand(2); });
   if (tease) {
     await done[1];
-    startDrama((durations[2] - durations[1]) / 1000);
+    startDrama((durations[2] - durations[1]) / 1000, teaseRow);
   }
   await Promise.all(done);
-  if (tease) stopDrama(line[2] === 'face');
-
-  const result = evaluate(line);
+  const result = evaluateSpin(grid);
+  // Trauriger Ton nur, wenn der Stockmann fehlt UND auch keine andere Linie gewonnen hat
+  if (tease) stopDrama(!!result.bonusLine || result.wins.length > 0);
   state.spinning = false;
 
-  if (result.bonus) {
-    // 3 Köpfe (nur im Grundspiel möglich): 10× Einsatz + Bonusspiel
-    const win = cents(result.pay * BET);
-    state.balance = cents(state.balance + win);
-    $('lastWin').textContent = money(win);
-    [0, 1, 2].forEach((i) => reels[i].el.classList.add('win'));
-    triggerBonus(win);
-    updateUI();
-    return;
-  } else if (result.pay > 0) {
-    const mult = fs ? fs.mult : 1;
-    const win = cents(result.pay * BET * mult);
+  // Liniengewinne zusammenzählen (in den Freispielen × Multiplikator)
+  const mult = fs ? fs.mult : 1;
+  const win = cents(result.wins.reduce((sum, l) => sum + l.pay, 0) * BET * mult);
+  result.wins.forEach((l) => highlightLine(l.row));
+  if (win > 0) {
     state.balance = cents(state.balance + win);
     if (fs) fs.won = cents(fs.won + win);
+  }
+
+  if (result.bonusLine) {
+    // 3 Köpfe (nur im Grundspiel möglich): 10× Einsatz + Bonusspiel
+    const trigger = cents(result.bonusLine.pay * BET);
+    state.balance = cents(state.balance + trigger);
+    highlightLine(result.bonusLine.row);
+    $('lastWin').textContent = money(cents(trigger + win));
+    triggerBonus(trigger);
+    updateUI();
+    return;
+  } else if (win > 0) {
     $('lastWin').textContent = money(win);
-    result.hits.forEach((i) => reels[i].el.classList.add('win'));
-    setMsg(`${result.text}: +${money(win)}${mult > 1 ? ` (×${mult})` : ''} 🎉`);
-    if (win >= 20 * BET) bigWin(win); else sound.win();
+    const multText = mult > 1 ? ` (×${mult})` : '';
+    if (result.wins.length === 1) {
+      const l = result.wins[0];
+      setMsg(`Linie ${l.row + 1}: ${l.text} +${money(win)}${multText} 🎉`);
+    } else {
+      setMsg(`${result.wins.length} Linien: +${money(win)}${multText} 🎉`);
+    }
+    if (win >= 20 * BET) bigWin(win); else sound.win(win / BET);
   } else {
     setMsg(tease ? 'Sooo knapp! 😩' : fs ? 'Leider nichts – weiter geht’s!' : randomMiss());
   }
@@ -979,10 +1037,10 @@ async function spin() {
   updateUI();
 
   if (fs) {
-    if (fs.left > 0) setTimeout(spin, result.pay > 0 ? 1400 : 700);
+    if (fs.left > 0) setTimeout(spin, win > 0 ? 1400 : 700);
     else setTimeout(endFreeSpins, 1400);
   } else if (state.auto) {
-    if (state.balance >= BET) setTimeout(() => state.auto && spin(), result.pay > 0 ? 1000 : 450);
+    if (state.balance >= BET) setTimeout(() => state.auto && spin(), win > 0 ? 1000 : 450);
     else { setAuto(false); gameOver(); }
   } else if (state.balance < BET) {
     setTimeout(gameOver, 800);
@@ -992,12 +1050,22 @@ async function spin() {
 const MISS_TEXTS = ['Nichts gewachsen … 🍂', 'Der Wald schweigt.', 'Weiterdrehen! 🌱', 'Knapp daneben ist auch vorbei.', 'Ich bin … leer. 🪵'];
 function randomMiss() { return MISS_TEXTS[Math.floor(Math.random() * MISS_TEXTS.length)]; }
 
-function clearHighlights() { reels.forEach((r) => r.el.classList.remove('win', 'tease', 'tease-hit')); }
+const ROW_CLASSES = ['win-r0', 'win-r1', 'win-r2', 'tease', 'tease-r0', 'tease-r1', 'tease-r2'];
+function clearHighlights() {
+  reels.forEach((r) => r.el.classList.remove(...ROW_CLASSES));
+  document.querySelectorAll('.payline').forEach((p) => p.classList.remove('win'));
+}
 
-function startDrama(seconds) {
+// Gewinnlinie markieren: alle 3 Felder der Reihe leuchten, die Linie wird golden
+function highlightLine(row) {
+  reels.forEach((r) => r.el.classList.add('win-r' + row));
+  document.querySelectorAll('.payline')[row].classList.add('win');
+}
+
+function startDrama(seconds, row) {
   document.querySelector('.reels-window').classList.add('drama');
-  reels[0].el.classList.add('tease-hit');
-  reels[1].el.classList.add('tease-hit');
+  reels[0].el.classList.add('tease-r' + row);
+  reels[1].el.classList.add('tease-r' + row);
   reels[2].el.classList.add('tease');
   setMsg('Noch ein Stockmann …?! 😱');
   sound.heartbeat(seconds);
@@ -1006,7 +1074,7 @@ function startDrama(seconds) {
 
 function stopDrama(hit) {
   document.querySelector('.reels-window').classList.remove('drama');
-  reels.forEach((r) => r.el.classList.remove('tease', 'tease-hit'));
+  reels.forEach((r) => r.el.classList.remove('tease', 'tease-r0', 'tease-r1', 'tease-r2'));
   if (!hit) sound.miss();
 }
 
@@ -1335,7 +1403,7 @@ function buildPaytable() {
   $('ptGrid').innerHTML = rows.map(([syms, pay, label]) =>
     `<div class="pt-syms">${syms.map(icon).join('')}${label ? `<small style="font-size:13px;font-weight:800;margin-left:6px">${label}</small>` : ''}</div><div class="pt-pay">${pay}</div>`
   ).join('') + `<div class="pt-note">
-    Gewertet wird nur die rote Gewinnlinie in der Mitte.<br>
+    <b>3 Gewinnlinien:</b> oben, Mitte und unten. Gewinne gelten pro Linie, mehrere Linien können gleichzeitig gewinnen. Der Einsatz gilt für alle 3 Linien zusammen.<br>
     <b>Joker (WILD)</b> ersetzt jedes Symbol außer Stockmann.<br>
     <b>Bonus:</b> 3× Stockmann → wähle einen von 5 Stöcken. Dahinter verstecken sich (zufällig gemischt):
     ${STICK_PRIZES.map((p) => `×${p.mult} & ${p.spins}`).join(', ')} Freispiele.
@@ -1359,23 +1427,68 @@ const sound = (() => {
   let on = true;
   try { on = localStorage.getItem(SOUND_STORAGE_KEY) !== 'off'; } catch (e) {}
 
-  function tone(freq, dur, { type = 'triangle', vol = 0.15, delay = 0 } = {}) {
+  function audio() {
+    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    return ctx;
+  }
+
+  // Ein Ton; mit "slide" gleitet die Tonhöhe bis zur Zielfrequenz
+  function tone(freq, dur, { type = 'triangle', vol = 0.15, delay = 0, slide = null } = {}) {
     if (!on) return;
     try {
-      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
-      const t = ctx.currentTime + delay;
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
+      const c = audio();
+      const t = c.currentTime + delay;
+      const o = c.createOscillator();
+      const g = c.createGain();
       o.type = type;
       o.frequency.setValueAtTime(freq, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
       g.gain.setValueAtTime(vol, t);
       g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-      o.connect(g).connect(ctx.destination);
+      o.connect(g).connect(c.destination);
       o.start(t);
       o.stop(t + dur + 0.02);
     } catch (e) {}
   }
-  const seq = (notes, step, opts) => notes.forEach((f, i) => tone(f, step * 1.6, { ...opts, delay: i * step }));
+
+  // Kurzes Rauschen (für den mechanischen Klick beim Walzenstopp)
+  function noise(dur, { vol = 0.08, delay = 0, freq = 1800 } = {}) {
+    if (!on) return;
+    try {
+      const c = audio();
+      const t = c.currentTime + delay;
+      const buf = c.createBuffer(1, Math.ceil(c.sampleRate * dur), c.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+      const src = c.createBufferSource();
+      src.buffer = buf;
+      const f = c.createBiquadFilter();
+      f.type = 'bandpass';
+      f.frequency.value = freq;
+      const g = c.createGain();
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      src.connect(f).connect(g).connect(c.destination);
+      src.start(t);
+    } catch (e) {}
+  }
+
+  const seq = (notes, step, opts) => notes.forEach((f, i) => tone(f, step * 1.6, { ...opts, delay: (opts?.delay || 0) + i * step }));
+
+  // Bläser-Akkord: zwei leicht verstimmte Sägezahn-Töne pro Note klingen voller
+  function chord(freqs, dur, delay = 0, vol = 0.05) {
+    freqs.forEach((f) => {
+      tone(f, dur, { type: 'sawtooth', vol, delay });
+      tone(f * 1.006, dur, { type: 'sawtooth', vol: vol * 0.7, delay });
+    });
+  }
+
+  // Klingelndes Hochzählen: abwechselnd zwei helle Glockentöne
+  function rollup(count, step = 0.05, delay = 0) {
+    for (let i = 0; i < count; i++) {
+      tone(i % 2 ? 1760 : 1568, 0.07, { type: 'triangle', vol: 0.09, delay: delay + i * step });
+    }
+  }
 
   return {
     get on() { return on; },
@@ -1384,9 +1497,14 @@ const sound = (() => {
       try { localStorage.setItem(SOUND_STORAGE_KEY, on ? 'on' : 'off'); } catch (e) {}
       return on;
     },
-    start: () => tone(180, 0.12, { type: 'square', vol: 0.05 }),
-    stop: () => tone(140, 0.08, { type: 'square', vol: 0.08 }),
-    tease: () => seq([330, 349, 370, 392, 415, 440, 466, 494, 523, 554, 587, 622], 0.25, { type: 'sawtooth', vol: 0.04 }),
+    // Walzen starten: kurzes aufsteigendes Surren
+    start: () => tone(140, 0.25, { type: 'sawtooth', vol: 0.04, slide: 520 }),
+    // Walze stoppt: satter "Klonk" mit mechanischem Klick
+    stop: () => {
+      tone(170, 0.11, { type: 'square', vol: 0.12, slide: 55 });
+      noise(0.04, { vol: 0.07, freq: 2200 });
+    },
+    tease: () => seq([330, 392, 440, 494, 523, 587, 659, 698, 784, 880, 988, 1047], 0.25, { type: 'square', vol: 0.035 }),
     // Herzschlag, der immer schneller wird
     heartbeat: (seconds) => {
       let t = 0, gap = 0.55;
@@ -1398,11 +1516,59 @@ const sound = (() => {
       }
     },
     miss: () => seq([392, 349, 311, 262], 0.14, { type: 'triangle', vol: 0.12 }),
-    win: () => seq([523, 659, 784], 0.08),
-    bigwin: () => seq([523, 659, 784, 1047, 784, 1047, 1319], 0.1, { vol: 0.18 }),
-    tick: (progress) => tone(330 + 900 * progress, 0.05, { type: 'square', vol: 0.035 }),
-    fanfare: () => seq([523, 659, 784, 1047, 1319, 1047, 1319, 1568, 2093], 0.09, { vol: 0.2 }),
-    bonus: () => seq([392, 523, 659, 784, 659, 784, 1047, 1319], 0.11, { type: 'square', vol: 0.08 }),
+    // Gewinn: klingelt umso länger, je größer der Gewinn (× Einsatz)
+    win: (xBet = 1) => {
+      const count = Math.max(6, Math.min(26, Math.round(5 + xBet * 4)));
+      rollup(count);
+      chord([523, 659, 784], 0.35, count * 0.05, 0.035);
+    },
+    bigwin: () => {
+      rollup(30, 0.045);
+      chord([523, 659, 784], 0.3, 0.2);
+      chord([587, 740, 880], 0.3, 0.55);
+      chord([659, 831, 988], 0.6, 0.9, 0.06);
+    },
+    // Tick beim Hochzählen in der Gewinn-Show
+    tick: (progress) => tone(progress > 0.5 ? 1760 : 1568, 0.05, { type: 'triangle', vol: 0.06 }),
+    fanfare: () => {
+      chord([392, 494, 587], 0.22, 0);
+      chord([440, 554, 659], 0.22, 0.22);
+      chord([494, 622, 740], 0.22, 0.44);
+      chord([523, 659, 784, 1047], 0.9, 0.66, 0.06);
+      rollup(16, 0.05, 0.7);
+    },
+    // Kopf gelandet, Bonus noch möglich: heller Pling (Stufe 1 = Walze 1, Stufe 2 = Walze 2, höher und voller)
+    faceLand: (level) => {
+      const base = level === 1 ? 880 : 1175;
+      tone(base, 0.5, { type: 'triangle', vol: 0.16 });
+      tone(base * 1.5, 0.45, { type: 'sine', vol: 0.08, delay: 0.03 });
+      tone(base * 2, 0.35, { type: 'sine', vol: 0.05, delay: 0.06 });
+      if (level === 2) {
+        tone(base / 2, 0.6, { type: 'sawtooth', vol: 0.05 });
+        seq([base, base * 1.26, base * 1.5], 0.07, { type: 'square', vol: 0.035, delay: 0.1 });
+      }
+    },
+    // Bonus-Musik: eigene kurze Abenteuer-Melodie in orientalischer Tonleiter (E-Hijaz: E F Gis A H C D)
+    bonus: () => {
+      const E = 330, F = 349, Gis = 415, A = 440, H = 494, C = 523, D = 587, E2 = 659;
+      // [Frequenz, Dauer in Schlägen]
+      const melody = [[E, 1], [F, 1], [Gis, 2], [A, 1], [H, 1], [C, 2], [H, 1], [A, 1], [Gis, 1], [F, 1],
+                      [Gis, 1], [A, 1], [H, 1], [D, 1], [C, 1], [H, 1], [E2, 4]];
+      const beat = 0.13;
+      let t = 0;
+      melody.forEach(([f, len]) => {
+        tone(f, beat * len * 1.1, { type: 'square', vol: 0.045, delay: t });
+        tone(f * 2, beat * len * 0.9, { type: 'triangle', vol: 0.03, delay: t });
+        t += beat * len;
+      });
+      // Bass-Trommel und tiefer Grundton darunter
+      for (let i = 0; i < Math.round(t / (beat * 2)); i++) {
+        tone(i % 2 ? 98 : 82, 0.18, { type: 'sine', vol: 0.3, delay: i * beat * 2, slide: 45 });
+        noise(0.05, { vol: 0.05, freq: 3000, delay: i * beat * 2 + beat });
+      }
+      tone(82, t, { type: 'sawtooth', vol: 0.025 });
+      chord([330, 415, 494, 659], 0.9, t - beat * 4, 0.04);
+    },
   };
 })();
 
