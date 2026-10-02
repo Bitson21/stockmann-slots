@@ -16,6 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **`evaluate(line)`:** wertet eine Linie aus. Es zählen nur 3 gleiche Symbole (Joker ersetzt alles außer Stockmann). 3× Joker zahlt `PAY_3.wild`. 3× Stockmann = Bonus.
 - **`evaluateSpin(grid)`:** wertet alle 3 Linien aus (`grid[walze] = [oben, Mitte, unten]`). `highlightLine(row)` markiert eine Gewinnlinie.
 - **Ablauf:** `spin()` → `triggerBonus()` (setzt `state.bonusPending`, zeigt `showCelebration`) → Stock-Auswahl `pickStick()` → Freispiele → `endFreeSpins()` → Gewinn-Show `showBonusWin()` (zählt hoch, Stufen aus `WIN_TIERS`).
+- **Spannungs-Sound:** `sound.faceLand(1)` wenn Walze 1 mit Kopf stoppt, `sound.faceLand(2)` wenn Walze 2 einen Kopf in derselben Reihe zeigt (nur wenn der Bonus noch möglich ist). `sound.bonus()` ist eine eigene Melodie (E-Hijaz-Tonleiter), keine Kopie.
 - **Drama:** Zwei Stockmänner auf Walze 1+2 in derselben Reihe → `startDrama(sekunden, reihe)`/`stopDrama()`, Walze 3 dreht 3 s länger.
 - **Geld:** immer über `cents()` runden und über `money()` anzeigen (deutsches Format mit Tausenderpunkt).
 - **Test-Hilfe:** `window.__force = ['face','face','face']` erzwingt das nächste Ergebnis auf der mittleren Linie (in der Browser-Konsole).
