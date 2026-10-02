@@ -1,0 +1,1445 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stockmann Slots</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cell: clamp(76px, 22vw, 118px);
+    --gold: #ffd166;
+    --leaf: #6cc24a;
+    --bark-dark: #3e2410;
+    --face: none;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    min-height: 100vh;
+    background: radial-gradient(ellipse at 50% 0%, #2c5a31 0%, #143a1c 45%, #07160b 100%);
+    color: #f6ecd9;
+    font-family: "Nunito", system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 16px 40px;
+    overflow-x: hidden;
+  }
+
+  /* Glühwürmchen im Hintergrund */
+  .fly {
+    position: fixed;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #e9ff8a;
+    box-shadow: 0 0 10px 3px rgba(220, 255, 120, .7);
+    pointer-events: none;
+    animation: float 9s ease-in-out infinite;
+    opacity: .0;
+    z-index: 0;
+  }
+  @keyframes float {
+    0%   { transform: translate(0, 0); opacity: 0; }
+    20%  { opacity: .9; }
+    50%  { transform: translate(30px, -40px); opacity: .4; }
+    80%  { opacity: .9; }
+    100% { transform: translate(-10px, -90px); opacity: 0; }
+  }
+
+  /* Automat aus Holz */
+  .cabinet {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 520px;
+    padding: 18px 18px 22px;
+    border-radius: 30px;
+    border: 6px solid var(--bark-dark);
+    background:
+      repeating-linear-gradient(93deg, rgba(0,0,0,.10) 0 2px, transparent 2px 11px),
+      repeating-linear-gradient(88deg, #6b3f1d 0 7px, #7d4c25 7px 15px, #5f3719 15px 19px);
+    box-shadow: 0 25px 60px rgba(0,0,0,.6), inset 0 2px 0 rgba(255,255,255,.15);
+  }
+  .vine {
+    position: absolute;
+    font-size: 28px;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,.5));
+  }
+  .vine.l { top: -18px; left: -14px; transform: rotate(-20deg); }
+  .vine.r { top: -18px; right: -14px; transform: scaleX(-1) rotate(-20deg); }
+
+  h1 {
+    margin: 0;
+    text-align: center;
+    font-family: "Luckiest Guy", "Nunito", sans-serif;
+    font-weight: normal;
+    font-size: clamp(34px, 10vw, 54px);
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-shadow: 0 3px 0 #a0521a, 0 6px 0 var(--bark-dark), 0 10px 18px rgba(0,0,0,.6);
+    line-height: 1;
+  }
+  .subtitle {
+    text-align: center;
+    margin: 6px 0 14px;
+    font-weight: 800;
+    color: #c8f0a8;
+    font-size: 15px;
+    letter-spacing: 1px;
+  }
+
+  /* Freispiel-Banner */
+  .fs-banner {
+    display: none;
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: linear-gradient(90deg, #2f7d32, #6cc24a, #2f7d32);
+    background-size: 200% 100%;
+    animation: shimmer 2.5s linear infinite;
+    text-align: center;
+    font-weight: 900;
+    color: #10260f;
+    box-shadow: 0 0 20px rgba(108,194,74,.6);
+  }
+  .fs-banner.show { display: block; }
+  .fs-banner .big { font-family: "Luckiest Guy", sans-serif; font-size: 22px; letter-spacing: 1px; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  /* Walzen */
+  .reels-window {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 18px;
+    background: #1b130b;
+    box-shadow: inset 0 0 0 4px #2b1a0c, inset 0 0 25px rgba(0,0,0,.9);
+  }
+  .reel {
+    position: relative;
+    width: var(--cell);
+    height: calc(var(--cell) * 3);
+    overflow: hidden;
+    border-radius: 12px;
+    background: linear-gradient(#cdbb94, #fff8e6 35%, #fff8e6 65%, #cdbb94);
+  }
+  .reel::after {
+    content: "";
+    position: absolute; inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 18px 22px -8px rgba(0,0,0,.55), inset 0 -18px 22px -8px rgba(0,0,0,.55);
+    z-index: 3;
+  }
+  .strip {
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    will-change: transform;
+  }
+  .reel.spinning .strip { filter: blur(1.2px); }
+  .sym {
+    height: var(--cell);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(var(--cell) * .6);
+    line-height: 1;
+    user-select: none;
+  }
+  .faceimg {
+    width: 84%;
+    height: 84%;
+    border-radius: 50%;
+    background-image: var(--face);
+    background-size: cover;
+    background-position: center;
+    border: 4px solid #6b3f1d;
+    box-shadow: 0 0 0 3px var(--leaf), 0 4px 8px rgba(0,0,0,.4);
+  }
+  .glow {
+    position: absolute;
+    left: 4px; right: 4px;
+    top: var(--cell);
+    height: var(--cell);
+    border-radius: 10px;
+    border: 4px solid var(--gold);
+    box-shadow: 0 0 18px var(--gold), inset 0 0 18px rgba(255,209,102,.6);
+    opacity: 0;
+    z-index: 4;
+    pointer-events: none;
+  }
+  .reel.win .glow { opacity: 1; animation: pulse .6s ease-in-out infinite alternate; }
+  .reel.win .strip .sym:nth-child(2) { animation: bounce .6s ease-in-out infinite alternate; }
+  /* Drama: zwei Stockmänner auf Walze 1 + 2 */
+  .reels-window.drama {
+    z-index: 6;
+    box-shadow: inset 0 0 0 4px #2b1a0c, inset 0 0 25px rgba(0,0,0,.9), 0 0 0 100vmax rgba(0,0,0,.65);
+  }
+  .reels-window { transition: box-shadow .4s; }
+  .reel.tease { animation: teaseglow .45s ease-in-out infinite alternate, teaseshake .12s linear infinite; }
+  @keyframes teaseglow {
+    from { box-shadow: 0 0 0 3px var(--gold), 0 0 18px 4px rgba(255,209,102,.6); }
+    to   { box-shadow: 0 0 0 5px var(--gold), 0 0 50px 16px rgba(255,209,102,1); }
+  }
+  @keyframes teaseshake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-1.5px); } 75% { transform: translateX(1.5px); } }
+  .reel.tease-hit .glow {
+    opacity: 1;
+    border-color: var(--leaf);
+    box-shadow: 0 0 18px var(--leaf), inset 0 0 18px rgba(108,194,74,.6);
+    animation: pulse .4s ease-in-out infinite alternate;
+  }
+  .reel.tease-hit .strip .sym:nth-child(2) { animation: bounce .4s ease-in-out infinite alternate; }
+  .drama-text {
+    display: none;
+    position: absolute;
+    left: 50%; top: -34px;
+    z-index: 8;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-family: "Luckiest Guy", sans-serif;
+    font-size: clamp(20px, 6vw, 30px);
+    color: var(--gold);
+    text-shadow: 0 3px 0 #a0521a, 0 0 18px rgba(255,209,102,.9);
+    pointer-events: none;
+  }
+  .reels-window.drama .drama-text { display: block; animation: dramapulse .5s ease-in-out infinite alternate; }
+  @keyframes dramapulse { from { transform: translateX(-50%) scale(1); } to { transform: translateX(-50%) scale(1.12); } }
+  @keyframes pulse { from { opacity: .55; } to { opacity: 1; } }
+  @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.12); } }
+
+  .payline {
+    position: absolute;
+    left: 2px; right: 2px;
+    top: 50%;
+    height: 4px;
+    transform: translateY(-50%);
+    background: rgba(230, 57, 70, .85);
+    box-shadow: 0 0 8px rgba(230,57,70,.9);
+    z-index: 5;
+    pointer-events: none;
+  }
+  .payline::before, .payline::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 9px solid transparent;
+  }
+  .payline::before { left: -8px; border-left-color: #e63946; }
+  .payline::after  { right: -8px; border-right-color: #e63946; }
+
+  /* Anzeigen */
+  .displays {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .display {
+    background: #140d06;
+    border-radius: 12px;
+    padding: 8px 6px;
+    text-align: center;
+    box-shadow: inset 0 0 0 2px #3a2511;
+  }
+  .display .label { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #c9a77c; font-weight: 800; }
+  .display .value { font-size: clamp(18px, 5vw, 24px); font-weight: 900; color: var(--gold); text-shadow: 0 0 8px rgba(255,209,102,.4); font-variant-numeric: tabular-nums; }
+
+  .msg {
+    min-height: 28px;
+    margin: 12px 0 6px;
+    text-align: center;
+    font-weight: 900;
+    font-size: 18px;
+    color: #fff3d6;
+    text-shadow: 0 2px 4px rgba(0,0,0,.6);
+  }
+
+  /* Knöpfe */
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 6px;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  .spin-btn {
+    width: 112px; height: 112px;
+    border-radius: 50%;
+    border: 6px solid #1f5a22;
+    background: radial-gradient(circle at 35% 30%, #a6ec7c, #4f9e2f 60%, #2f6d1c);
+    color: #0f2a0b;
+    font-family: "Luckiest Guy", sans-serif;
+    font-size: 24px;
+    letter-spacing: 1px;
+    box-shadow: 0 8px 0 #173f15, 0 12px 25px rgba(0,0,0,.5);
+    transition: transform .08s, box-shadow .08s, filter .2s;
+  }
+  .spin-btn:active:not(:disabled) { transform: translateY(6px); box-shadow: 0 2px 0 #173f15, 0 4px 10px rgba(0,0,0,.5); }
+  .spin-btn:disabled { filter: grayscale(.7) brightness(.7); cursor: default; }
+  .spin-btn small { display: block; font-family: "Nunito", sans-serif; font-size: 12px; font-weight: 900; }
+  .side-btn {
+    width: 70px;
+    padding: 10px 4px;
+    border-radius: 14px;
+    border: 3px solid var(--bark-dark);
+    background: linear-gradient(#a8743f, #7a4a24);
+    color: #fff3d6;
+    font-weight: 900;
+    font-size: 13px;
+    box-shadow: 0 4px 0 var(--bark-dark);
+  }
+  .side-btn .ico { display: block; font-size: 22px; }
+  .side-btn.on { background: linear-gradient(#7fd35a, #3f8a24); color: #0f2a0b; }
+  .side-btn:disabled { filter: grayscale(.8) brightness(.7); cursor: default; }
+
+  .stats {
+    margin-top: 14px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    font-size: 13px;
+    color: #d9c3a0;
+    font-weight: 800;
+  }
+
+  /* Gewinntabelle */
+  details.paytable {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 520px;
+    margin-top: 18px;
+    background: rgba(20, 13, 6, .85);
+    border: 3px solid #5c3518;
+    border-radius: 18px;
+    padding: 12px 16px;
+  }
+  details.paytable summary { cursor: pointer; font-weight: 900; font-size: 17px; color: var(--gold); }
+  .pt-grid { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; margin-top: 10px; align-items: center; }
+  .pt-syms { display: flex; gap: 4px; align-items: center; font-size: 26px; }
+  .wild-svg { width: 86%; height: 86%; filter: drop-shadow(0 3px 4px rgba(0,0,0,.4)); }
+  .pt-syms .wild-svg { width: 32px; height: 32px; }
+  .pt-syms .faceimg { width: 30px; height: 30px; border-width: 2px; box-shadow: 0 0 0 2px var(--leaf); }
+  .pt-pay { font-weight: 900; color: var(--gold); text-align: right; }
+  .pt-note { grid-column: 1 / -1; font-size: 13px; color: #c9a77c; margin-top: 6px; line-height: 1.4; }
+
+
+  /* Overlays */
+  .overlay {
+    position: fixed; inset: 0;
+    z-index: 20;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(4, 14, 6, .86);
+    backdrop-filter: blur(3px);
+  }
+  .overlay.show { display: flex; animation: fadein .3s ease; }
+  @keyframes fadein { from { opacity: 0; } }
+  .modal {
+    width: 100%;
+    max-width: 620px;
+    text-align: center;
+    padding: 22px 16px;
+    border-radius: 26px;
+    border: 6px solid var(--bark-dark);
+    background:
+      radial-gradient(ellipse at top, rgba(108,194,74,.25), transparent 60%),
+      repeating-linear-gradient(88deg, #5a3418 0 7px, #6b3f1d 7px 15px, #4f2e14 15px 19px);
+    box-shadow: 0 25px 60px rgba(0,0,0,.7);
+    animation: popin .45s cubic-bezier(.2,1.6,.4,1);
+  }
+  @keyframes popin { from { transform: scale(.6); opacity: 0; } }
+  .modal h2 {
+    margin: 0 0 6px;
+    font-family: "Luckiest Guy", sans-serif;
+    font-weight: normal;
+    font-size: clamp(28px, 8vw, 44px);
+    color: var(--gold);
+    text-shadow: 0 3px 0 #a0521a, 0 6px 14px rgba(0,0,0,.6);
+  }
+  .modal p { margin: 6px 0 14px; font-weight: 800; font-size: 17px; }
+  .big-face {
+    width: 110px; height: 110px;
+    margin: 4px auto 10px;
+    animation: wobble 1.2s ease-in-out infinite;
+  }
+  .big-face .faceimg { width: 100%; height: 100%; }
+  @keyframes wobble { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg) scale(1.05); } }
+
+  .sticks {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: clamp(4px, 2vw, 16px);
+    min-height: 250px;
+    margin: 8px 0 12px;
+  }
+  .stick {
+    position: relative;
+    flex: 1 1 0;
+    max-width: 100px;
+    background: none;
+    border: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform .2s, opacity .4s;
+  }
+  .stick svg { width: 100%; max-width: 80px; height: auto; filter: drop-shadow(0 6px 6px rgba(0,0,0,.5)); }
+  .stick .stick-name { font-size: 12px; font-weight: 800; color: #e8d6b5; line-height: 1.1; }
+  .stick:not(:disabled):hover { transform: translateY(-8px) rotate(-3deg); }
+  .stick:not(:disabled) { animation: sway 2.4s ease-in-out infinite; }
+  .stick:nth-child(2) { animation-delay: -.5s !important; }
+  .stick:nth-child(3) { animation-delay: -1s !important; }
+  .stick:nth-child(4) { animation-delay: -1.5s !important; }
+  .stick:nth-child(5) { animation-delay: -2s !important; }
+  @keyframes sway { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+  .stick .num { font-family: "Luckiest Guy", sans-serif; font-size: 20px; color: #fff3d6; margin-top: 4px; }
+  .stick:disabled { cursor: default; }
+  .stick.picked { animation: shake .5s ease; }
+  .stick.other { opacity: .45; }
+  @keyframes shake { 0%,100% { transform: rotate(0); } 20% { transform: rotate(-12deg); } 40% { transform: rotate(10deg); } 60% { transform: rotate(-8deg); } 80% { transform: rotate(5deg); } }
+  .prize {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    min-width: 74px;
+    padding: 8px 6px;
+    border-radius: 12px;
+    background: #fff8e6;
+    color: #2b1a0c;
+    font-weight: 900;
+    font-size: 13px;
+    line-height: 1.25;
+    box-shadow: 0 6px 14px rgba(0,0,0,.5);
+    transition: transform .4s cubic-bezier(.2,1.6,.4,1);
+    z-index: 2;
+  }
+  .prize b { display: block; font-family: "Luckiest Guy", sans-serif; font-weight: normal; font-size: 26px; color: #c0392b; }
+  .stick.revealed .prize { transform: translate(-50%, -50%) scale(1); }
+  .stick.picked .prize { background: var(--gold); box-shadow: 0 0 25px var(--gold); }
+
+  .big-btn {
+    border: 5px solid #1f5a22;
+    border-radius: 999px;
+    padding: 12px 26px;
+    background: linear-gradient(#a6ec7c, #4f9e2f);
+    color: #0f2a0b;
+    font-family: "Luckiest Guy", sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+    box-shadow: 0 6px 0 #173f15;
+  }
+  .big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #173f15; }
+  .hidden { display: none !important; }
+
+  /* Großer Gewinn */
+  .bigwin {
+    position: fixed;
+    left: 50%; top: 40%;
+    transform: translate(-50%, -50%) scale(0);
+    z-index: 15;
+    pointer-events: none;
+    font-family: "Luckiest Guy", sans-serif;
+    font-size: clamp(40px, 12vw, 80px);
+    color: var(--gold);
+    text-align: center;
+    white-space: nowrap;
+    text-shadow: 0 4px 0 #a0521a, 0 8px 0 var(--bark-dark), 0 0 40px rgba(255,209,102,.8);
+  }
+  .bigwin.show { animation: bigwin 2.2s ease forwards; }
+  @keyframes bigwin {
+    0%   { transform: translate(-50%, -50%) scale(0) rotate(-10deg); }
+    20%  { transform: translate(-50%, -50%) scale(1.15) rotate(3deg); }
+    30%  { transform: translate(-50%, -50%) scale(1) rotate(0); }
+    80%  { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(.8); opacity: 0; }
+  }
+  .falling {
+    position: fixed;
+    top: -50px;
+    z-index: 14;
+    pointer-events: none;
+    font-size: 28px;
+    animation: fall linear forwards;
+  }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+
+  /* ===== Kleine Animation: Bonus ausgelöst ===== */
+  .retrigger {
+    position: fixed;
+    left: 50%; top: 42%;
+    z-index: 16;
+    transform: translate(-50%, -50%) scale(0);
+    pointer-events: none;
+    text-align: center;
+    padding: 18px 28px;
+    border-radius: 24px;
+    background: radial-gradient(circle, rgba(47,109,28,.95), rgba(11,36,16,.95));
+    border: 4px solid var(--gold);
+    box-shadow: 0 0 40px rgba(255,209,102,.8);
+  }
+  .retrigger.show { animation: retrigger 2.6s ease forwards; }
+  @keyframes retrigger {
+    0%   { transform: translate(-50%, -50%) scale(0) rotate(-15deg); opacity: 1; }
+    15%  { transform: translate(-50%, -50%) scale(1.15) rotate(4deg); }
+    25%  { transform: translate(-50%, -50%) scale(1) rotate(0); }
+    85%  { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(.7); opacity: 0; }
+  }
+  .rt-face {
+    width: 90px; height: 90px;
+    margin: 0 auto 8px;
+    border-radius: 50%;
+    animation: spin-face 1s ease-out;
+  }
+  .rt-face .faceimg { width: 100%; height: 100%; }
+  @keyframes spin-face { from { transform: rotate(-720deg) scale(.3); } }
+  .rt-title {
+    font-family: "Luckiest Guy", sans-serif;
+    font-size: clamp(28px, 8vw, 44px);
+    color: var(--gold);
+    text-shadow: 0 3px 0 #a0521a, 0 0 20px rgba(255,209,102,.8);
+    white-space: nowrap;
+  }
+  .rt-win { font-family: "Luckiest Guy", sans-serif; font-size: 26px; color: #fff3c4; }
+
+  /* ===== Gewinn-Show am Ende des Bonus ===== */
+  .winshow {
+    position: fixed; inset: 0;
+    z-index: 30;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 45%, #2f6d1c 0%, #0b2410 55%, #030a04 100%);
+    cursor: pointer;
+  }
+  .winshow.show { display: flex; animation: fadein .4s ease; }
+  .ws-rays {
+    position: absolute;
+    left: 50%; top: 45%;
+    width: 220vmax; height: 220vmax;
+    margin: -110vmax 0 0 -110vmax;
+    background: repeating-conic-gradient(rgba(255,209,102,.22) 0deg 8deg, transparent 8deg 20deg);
+    animation: rays 14s linear infinite;
+    mask-image: radial-gradient(circle, #000 0%, transparent 45%);
+    -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 45%);
+  }
+  @keyframes rays { to { transform: rotate(360deg); } }
+  .winshow.done .ws-rays { animation-duration: 5s; }
+  .ws-flash {
+    position: absolute; inset: 0;
+    background: #fff8d0;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .winshow.done .ws-flash { animation: flash .7s ease-out; }
+  @keyframes flash { 0% { opacity: .9; } 100% { opacity: 0; } }
+  .ws-content { position: relative; z-index: 2; text-align: center; padding: 16px; }
+  .ws-tier {
+    font-family: "Luckiest Guy", sans-serif;
+    font-size: clamp(38px, 11vw, 84px);
+    line-height: 1;
+    color: var(--gold);
+    text-shadow: 0 4px 0 #a0521a, 0 8px 0 var(--bark-dark), 0 0 40px rgba(255,209,102,.9);
+    max-width: 92vw;
+    margin: 0 auto;
+    overflow-wrap: break-word;
+  }
+  .ws-tier.pop { animation: tierpop .6s cubic-bezier(.2,1.8,.4,1); }
+  @keyframes tierpop {
+    0% { transform: scale(.3) rotate(-12deg); }
+    60% { transform: scale(1.25) rotate(4deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+  .ws-face {
+    width: clamp(110px, 32vw, 170px);
+    height: clamp(110px, 32vw, 170px);
+    margin: 18px auto 10px;
+    border-radius: 50%;
+    animation: facein 1s cubic-bezier(.2,1.5,.4,1), facebounce .5s ease-in-out 1s infinite alternate;
+    box-shadow: 0 0 0 6px var(--gold), 0 0 50px 12px rgba(255,209,102,.7);
+  }
+  .ws-face .faceimg { width: 100%; height: 100%; }
+  @keyframes facein { from { transform: scale(0) rotate(-540deg); } }
+  @keyframes facebounce { from { transform: translateY(0) rotate(-4deg); } to { transform: translateY(-10px) rotate(4deg); } }
+  .ws-amount {
+    font-family: "Luckiest Guy", sans-serif;
+    font-size: clamp(54px, 16vw, 110px);
+    line-height: 1;
+    color: #fff3c4;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 20px rgba(255,209,102,.9), 0 5px 0 #a0521a, 0 10px 0 var(--bark-dark);
+  }
+  .winshow.counting .ws-amount { animation: throb .25s ease-in-out infinite alternate; }
+  .winshow.done .ws-amount { animation: tierpop .7s cubic-bezier(.2,1.8,.4,1); color: var(--gold); }
+  @keyframes throb { to { transform: scale(1.06); } }
+  .ws-breakdown {
+    margin: 14px 0 18px;
+    min-height: 44px;
+    font-weight: 900;
+    font-size: 17px;
+    color: #e8f5d8;
+    line-height: 1.5;
+    opacity: 0;
+    transition: opacity .5s;
+  }
+  .winshow.done .ws-breakdown { opacity: 1; }
+  .ws-btn { opacity: 0; pointer-events: none; transition: opacity .4s; }
+  .winshow.done .ws-btn { opacity: 1; pointer-events: auto; }
+  .ws-particle {
+    position: absolute;
+    left: 50%; top: 58%;
+    z-index: 1;
+    font-size: 30px;
+    pointer-events: none;
+    animation: fountain var(--dur) cubic-bezier(.3,.6,.6,1) forwards;
+  }
+  @keyframes fountain {
+    0%   { transform: translate(-50%, 0) scale(.4) rotate(0); opacity: 1; }
+    45%  { transform: translate(calc(-50% + var(--dx) * .6), var(--dy)) scale(1.1) rotate(200deg); }
+    100% { transform: translate(calc(-50% + var(--dx)), 70vh) scale(1) rotate(560deg); opacity: .9; }
+  }
+  .shake { animation: shake-screen .5s ease; }
+  @keyframes shake-screen {
+    0%,100% { transform: translate(0,0); }
+    20% { transform: translate(-8px, 4px); }
+    40% { transform: translate(7px, -5px); }
+    60% { transform: translate(-5px, 3px); }
+    80% { transform: translate(4px, -2px); }
+  }
+</style>
+</head>
+<body>
+
+<div class="cabinet">
+  <span class="vine l">🌿</span><span class="vine r">🌿</span>
+  <h1>STOCKMANN</h1>
+  <div class="subtitle">🌱 ICH BIN STOCKMANN! 🌱</div>
+
+  <div class="fs-banner" id="fsBanner">
+    <div class="big" id="fsTitle">FREISPIEL 1 / 5</div>
+    <div id="fsInfo">Multiplikator ×2 · Bonusgewinn: $0</div>
+  </div>
+
+  <div class="reels-window">
+    <div class="reel" id="reel0"><div class="strip"></div><div class="glow"></div></div>
+    <div class="reel" id="reel1"><div class="strip"></div><div class="glow"></div></div>
+    <div class="reel" id="reel2"><div class="strip"></div><div class="glow"></div></div>
+    <div class="payline"></div>
+    <div class="drama-text">🔥 NOCH EIN STOCKMANN …?! 🔥</div>
+  </div>
+
+  <div class="displays">
+    <div class="display"><div class="label">Guthaben</div><div class="value" id="balance">$1.000</div></div>
+    <div class="display"><div class="label">Einsatz</div><div class="value" id="betDisplay">$10</div></div>
+    <div class="display"><div class="label">Gewinn</div><div class="value" id="lastWin">$0</div></div>
+  </div>
+
+  <div class="msg" id="msg">Viel Glück im Wald! 🌲</div>
+
+  <div class="controls">
+    <button class="side-btn" id="autoBtn" title="Automatisch drehen"><span class="ico">🔁</span>Auto</button>
+    <button class="spin-btn" id="spinBtn">DREHEN<small>Leertaste</small></button>
+    <button class="side-btn" id="soundBtn" title="Ton an/aus"><span class="ico">🔊</span>Ton</button>
+  </div>
+
+  <div class="stats">
+    <span>Drehs: <b id="spinCount">0</b></span>
+    <span>Seit letztem Bonus: <b id="sinceBonus">0</b></span>
+    <span>Boni: <b id="bonusCount">0</b></span>
+  </div>
+</div>
+
+<details class="paytable">
+  <summary>📜 Gewinntabelle</summary>
+  <div class="pt-grid" id="ptGrid"></div>
+</details>
+
+<!-- Bonusspiel: Stock auswählen -->
+<div class="overlay" id="bonusOverlay">
+  <div class="modal">
+    <h2>ICH BIN STOCKMANN!</h2>
+    <div class="big-face"><div class="faceimg"></div></div>
+    <p id="bonusText">Bonusspiel! Wähle einen der 5 Stöcke 🌿</p>
+    <div class="sticks" id="sticks"></div>
+    <button class="big-btn hidden" id="startFsBtn">FREISPIELE STARTEN</button>
+  </div>
+</div>
+
+<!-- Ende des Bonusspiels / Spiel vorbei -->
+<div class="overlay" id="infoOverlay">
+  <div class="modal">
+    <h2 id="infoTitle">BONUS VORBEI</h2>
+    <div class="big-face"><div class="faceimg"></div></div>
+    <p id="infoText"></p>
+    <button class="big-btn" id="infoBtn">WEITER</button>
+  </div>
+</div>
+
+<div class="bigwin" id="bigwin"></div>
+
+<!-- Kleine Animation: Bonus ausgelöst -->
+<div class="retrigger" id="retrigger">
+  <div class="rt-face"><div class="faceimg"></div></div>
+  <div class="rt-title" id="rtTitle">BONUS GEWONNEN!</div>
+  <div class="rt-win" id="rtWin">+$10</div>
+</div>
+
+<!-- Große Gewinn-Show am Ende des Bonus -->
+<div class="winshow" id="winShow">
+  <div class="ws-rays"></div>
+  <div class="ws-flash"></div>
+  <div class="ws-content">
+    <div class="ws-tier" id="wsTier">GEWINN!</div>
+    <div class="ws-face"><div class="faceimg"></div></div>
+    <div class="ws-amount" id="wsAmount">$0,00</div>
+    <div class="ws-breakdown" id="wsBreakdown"></div>
+    <button class="big-btn ws-btn" id="wsBtn">EINSAMMELN</button>
+  </div>
+</div>
+
+<script>
+// ======================================================
+//  Spiel-Einstellungen (Mathe: ~99,5 % Auszahlung,
+//  Bonus ca. alle 50 Drehs, Gewinn bei ca. 5 % der Drehs im Grundspiel,
+//  ca. 36 % in den Freispielen – der Großteil der Gewinne steckt im Bonus.
+//  Alle Gewinne in „× Einsatz“.)
+// ======================================================
+const BET = 10;
+const START_BALANCE = 1000;
+
+// Wie oft jedes Symbol auf einer Walze vorkommt (48 Felder pro Walze)
+// Grundspiel: wenige Joker, Gewinne eher selten – Bonus ca. alle 50 Drehs
+const WEIGHTS = { wild: 2, eichel: 8, blatt: 8, pilz: 6, tanne: 5, stamm: 4, rocket: 2, face: 13 };
+// Freispiele: eigene Walzen ohne Stockmann, mit viel mehr Jokern und Blättern → viel mehr Treffer
+const FS_WEIGHTS = { wild: 13, eichel: 9, blatt: 16, pilz: 1, tanne: 3, stamm: 5, rocket: 1 };
+
+const SYMBOLS = {
+  wild:   { emoji: '🌱', name: 'Joker' },
+  eichel: { emoji: '🌰', name: 'Eichel' },
+  blatt:  { emoji: '🍃', name: 'Blatt' },
+  pilz:   { emoji: '🍄', name: 'Pilz' },
+  tanne:  { emoji: '🌲', name: 'Tanne' },
+  stamm:  { emoji: '🪵', name: 'Holzstamm' },
+  rocket: { emoji: '🦝', name: 'Waschbär' },
+  face:   { emoji: null, name: 'Stockmann' },
+};
+
+// Gewinne für 3 gleiche Symbole (× Einsatz). Der Joker (WILD) ersetzt jedes normale Symbol.
+const PAY_3 = { wild: 10, rocket: 8, stamm: 6, tanne: 4, pilz: 3, eichel: 2, blatt: 1 };
+const PAY_3_FACE = 10;    // 3 Gesichter = 10× Einsatz + Bonus (kommt nur im Grundspiel vor)
+
+// Die 5 Stöcke im Bonusspiel (werden jedes Mal neu gemischt)
+const STICK_PRIZES = [
+  { mult: 2, spins: 8 },
+  { mult: 3, spins: 8 },
+  { mult: 4, spins: 10 },
+  { mult: 5, spins: 10 },
+  { mult: 8, spins: 10 },
+];
+
+// Das Gesicht von Stockmann – fest eingebaut (256×256 JPEG als Text)
+const FACE_IMAGE = 'data:image/jpeg;base64,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';
+const SOUND_STORAGE_KEY = 'stockmann-sound';
+
+// ======================================================
+//  Zustand
+// ======================================================
+const state = {
+  balance: START_BALANCE,
+  spinning: false,
+  auto: false,
+  freeSpins: null,   // { left, total, mult, won, triggerWin }
+  bonusPending: false, // Bonus ausgelöst, Freispiele haben aber noch nicht begonnen
+  spins: 0,
+  sinceBonus: 0,
+  bonusCount: 0,
+};
+
+const $ = (id) => document.getElementById(id);
+
+// ======================================================
+//  Walzen aufbauen
+// ======================================================
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function makeStrip(weights) {
+  const strip = [];
+  for (const [sym, count] of Object.entries(weights)) {
+    for (let i = 0; i < count; i++) strip.push(sym);
+  }
+  return shuffle(strip);
+}
+
+const reels = [0, 1, 2].map((i) => {
+  const el = $('reel' + i);
+  const baseStrip = makeStrip(WEIGHTS);
+  return {
+    el,
+    stripEl: el.querySelector('.strip'),
+    baseStrip,
+    fsStrip: makeStrip(FS_WEIGHTS),
+    // In den Freispielen laufen automatisch die Freispiel-Walzen
+    get strip() { return state.freeSpins ? this.fsStrip : this.baseStrip; },
+    stop: Math.floor(Math.random() * baseStrip.length),
+    shown: null, // die 3 Symbole, die gerade zu sehen sind
+  };
+});
+
+function visible(reel, stop) {
+  const n = reel.strip.length;
+  return [reel.strip[(stop - 1 + n) % n], reel.strip[stop], reel.strip[(stop + 1) % n]];
+}
+
+// Joker: „WILD“ aus kleinen Holzstöcken auf einem grünen Abzeichen
+const WILD_LETTERS = `
+  <polyline points="11,36 16,65 22,47 28,65 33,36"/>
+  <line x1="42" y1="36" x2="42" y2="65"/>
+  <polyline points="51,36 51,65 63,65"/>
+  <path d="M71 36 L71 65 Q89 64 89 50 Q89 37 71 36 Z"/>`;
+const WILD_SVG = `
+<svg class="wild-svg" viewBox="0 0 100 100" aria-label="Joker">
+  <defs>
+    <radialGradient id="wildBg" cx="50%" cy="40%" r="60%">
+      <stop offset="0" stop-color="#5fae3a"/><stop offset="1" stop-color="#1f4f17"/>
+    </radialGradient>
+  </defs>
+  <circle cx="50" cy="50" r="46" fill="url(#wildBg)" stroke="#ffd166" stroke-width="5"/>
+  <circle cx="50" cy="50" r="40" fill="none" stroke="#a8743f" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="#2b1708" stroke-width="8">${WILD_LETTERS}</g>
+    <g stroke="#9a6233" stroke-width="5">${WILD_LETTERS}</g>
+    <g stroke="#d9a466" stroke-width="1.6" transform="translate(-1 -1)">${WILD_LETTERS}</g>
+  </g>
+  <path d="M42 36 q-2 -9 6 -14 q2 9 -6 14z" fill="#9be36a" stroke="#2f6d1c" stroke-width="1"/>
+  <path d="M16 65 l-4 4 M28 65 l4 4 M63 65 l4 -3" stroke="#9a6233" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="50" y="84" text-anchor="middle" font-family="Luckiest Guy, sans-serif" font-size="11" fill="#ffd166">JOKER</text>
+</svg>`;
+
+function symHTML(sym) {
+  if (sym === 'face') return '<div class="sym"><div class="faceimg"></div></div>';
+  if (sym === 'wild') return `<div class="sym">${WILD_SVG}</div>`;
+  return `<div class="sym">${SYMBOLS[sym].emoji}</div>`;
+}
+
+function randomSym(reel) {
+  return reel.strip[Math.floor(Math.random() * reel.strip.length)];
+}
+
+function drawReel(reel) {
+  reel.stripEl.style.transition = 'none';
+  reel.stripEl.style.transform = 'translateY(0)';
+  reel.shown = visible(reel, reel.stop);
+  reel.stripEl.innerHTML = reel.shown.map(symHTML).join('');
+}
+
+function animateReel(reel, newStop, duration, easing = 'cubic-bezier(.15,.55,.3,1.06)') {
+  return new Promise((resolve) => {
+    const cell = reel.el.offsetHeight / 3;
+    const current = reel.shown;
+    const final = visible(reel, newStop);
+    const fillerCount = Math.round(duration / 45);
+    const fillers = Array.from({ length: fillerCount }, () => randomSym(reel));
+    // Reihenfolge von oben nach unten: Endergebnis … Füller … aktuelles Bild
+    const seq = [...final, ...fillers, ...current];
+
+    const s = reel.stripEl;
+    s.style.transition = 'none';
+    s.innerHTML = seq.map(symHTML).join('');
+    s.style.transform = `translateY(${-(seq.length - 3) * cell}px)`;
+    void s.offsetHeight; // Browser zwingen, die Startposition zu übernehmen
+    reel.el.classList.add('spinning');
+    s.style.transition = `transform ${duration}ms ${easing}`;
+    s.style.transform = 'translateY(0)';
+
+    setTimeout(() => {
+      reel.el.classList.remove('spinning');
+      reel.stop = newStop;
+      drawReel(reel);
+      sound.stop();
+      resolve();
+    }, duration + 30);
+  });
+}
+
+// ======================================================
+//  Gewinne auswerten (nur die mittlere Reihe = Gewinnlinie)
+// ======================================================
+function evaluate(line) {
+  const faces = line.filter((s) => s === 'face').length;
+  if (faces === 3) return { bonus: true, pay: PAY_3_FACE, text: '3× Stockmann', hits: [0, 1, 2] };
+  if (faces > 0) return { pay: 0 };
+
+  // Ab hier nur normale Symbole und Joker
+  const normal = line.filter((s) => s !== 'wild');
+  if (normal.length === 0) {
+    return { pay: PAY_3.wild, text: '3× Joker', hits: [0, 1, 2] };
+  }
+  if (normal.every((s) => s === normal[0])) {
+    const jokers = 3 - normal.length;
+    return { pay: PAY_3[normal[0]], text: `3× ${SYMBOLS[normal[0]].name}${jokers ? ' (mit Joker)' : ''}`, hits: [0, 1, 2] };
+  }
+  return { pay: 0 };
+}
+
+// Nur zum Testen in der Browser-Konsole: window.__force = ['face','face','face']
+function pickStop(reel, i) {
+  if (window.__force && window.__force[i]) {
+    const options = reel.strip.map((s, idx) => (s === window.__force[i] ? idx : -1)).filter((x) => x >= 0);
+    if (options.length) return options[Math.floor(Math.random() * options.length)];
+  }
+  return Math.floor(Math.random() * reel.strip.length);
+}
+
+// ======================================================
+//  Drehen
+// ======================================================
+async function spin() {
+  if (state.spinning || state.bonusPending) return;
+  const fs = state.freeSpins;
+
+  if (!fs) {
+    if (state.balance < BET) { gameOver(); return; }
+    state.balance = cents(state.balance - BET);
+    state.spins++;
+    state.sinceBonus++;
+  } else {
+    fs.left--;
+  }
+
+  state.spinning = true;
+  clearHighlights();
+  setMsg(fs ? 'Freispiel läuft … 🍀' : 'Die Walzen drehen sich …');
+  updateUI();
+  sound.start();
+
+  const stops = reels.map((r, i) => pickStop(r, i));
+  window.__force = null;
+  const line = stops.map((st, i) => reels[i].strip[st]);
+
+  // Drama: zwei Gesichter auf Walze 1 + 2 → Walze 3 dreht viel länger und bremst langsam
+  const tease = line[0] === 'face' && line[1] === 'face';
+  const base = fs ? 650 : 850;
+  const durations = [base, base + 300, base + 600 + (tease ? 3000 : 0)];
+  const slowStop = 'cubic-bezier(.05,.6,.1,1)';
+
+  const done = reels.map((r, i) =>
+    animateReel(r, stops[i], durations[i], tease && i === 2 ? slowStop : undefined));
+  if (tease) {
+    await done[1];
+    startDrama((durations[2] - durations[1]) / 1000);
+  }
+  await Promise.all(done);
+  if (tease) stopDrama(line[2] === 'face');
+
+  const result = evaluate(line);
+  state.spinning = false;
+
+  if (result.bonus) {
+    // 3 Köpfe (nur im Grundspiel möglich): 10× Einsatz + Bonusspiel
+    const win = cents(result.pay * BET);
+    state.balance = cents(state.balance + win);
+    $('lastWin').textContent = money(win);
+    [0, 1, 2].forEach((i) => reels[i].el.classList.add('win'));
+    triggerBonus(win);
+    updateUI();
+    return;
+  } else if (result.pay > 0) {
+    const mult = fs ? fs.mult : 1;
+    const win = cents(result.pay * BET * mult);
+    state.balance = cents(state.balance + win);
+    if (fs) fs.won = cents(fs.won + win);
+    $('lastWin').textContent = money(win);
+    result.hits.forEach((i) => reels[i].el.classList.add('win'));
+    setMsg(`${result.text}: +${money(win)}${mult > 1 ? ` (×${mult})` : ''} 🎉`);
+    if (win >= 20 * BET) bigWin(win); else sound.win();
+  } else {
+    setMsg(tease ? 'Sooo knapp! 😩' : fs ? 'Leider nichts – weiter geht’s!' : randomMiss());
+  }
+
+  updateUI();
+
+  if (fs) {
+    if (fs.left > 0) setTimeout(spin, result.pay > 0 ? 1400 : 700);
+    else setTimeout(endFreeSpins, 1400);
+  } else if (state.auto) {
+    if (state.balance >= BET) setTimeout(() => state.auto && spin(), result.pay > 0 ? 1000 : 450);
+    else { setAuto(false); gameOver(); }
+  } else if (state.balance < BET) {
+    setTimeout(gameOver, 800);
+  }
+}
+
+const MISS_TEXTS = ['Nichts gewachsen … 🍂', 'Der Wald schweigt.', 'Weiterdrehen! 🌱', 'Knapp daneben ist auch vorbei.', 'Ich bin … leer. 🪵'];
+function randomMiss() { return MISS_TEXTS[Math.floor(Math.random() * MISS_TEXTS.length)]; }
+
+function clearHighlights() { reels.forEach((r) => r.el.classList.remove('win', 'tease', 'tease-hit')); }
+
+function startDrama(seconds) {
+  document.querySelector('.reels-window').classList.add('drama');
+  reels[0].el.classList.add('tease-hit');
+  reels[1].el.classList.add('tease-hit');
+  reels[2].el.classList.add('tease');
+  setMsg('Noch ein Stockmann …?! 😱');
+  sound.heartbeat(seconds);
+  sound.tease();
+}
+
+function stopDrama(hit) {
+  document.querySelector('.reels-window').classList.remove('drama');
+  reels.forEach((r) => r.el.classList.remove('tease', 'tease-hit'));
+  if (!hit) sound.miss();
+}
+
+// ======================================================
+//  Bonusspiel
+// ======================================================
+// 5 komplett verschiedene Stöcke
+const STICK_NAMES = ['Birke', 'Gabel', 'Krummer Ast', 'Knüppel', 'Ranke'];
+const STICK_ART = [
+  // 1: Birke – weiß mit schwarzen Streifen
+  `<path d="M40 258 L38 30" stroke="#f1ede4" stroke-width="12" stroke-linecap="round"/>
+   <path d="M40 258 L38 30" stroke="#2a2420" stroke-width="12" stroke-dasharray="3 22 6 30 2 18" />
+   <path d="M39 120 L60 92" stroke="#f1ede4" stroke-width="5" stroke-linecap="round"/>
+   <ellipse cx="62" cy="88" rx="8" ry="4" fill="#9ccc3a" transform="rotate(-30 62 88)"/>
+   <ellipse cx="34" cy="26" rx="9" ry="5" fill="#9ccc3a" transform="rotate(-20 34 26)"/>
+   <ellipse cx="45" cy="22" rx="9" ry="5" fill="#b5dc52" transform="rotate(25 45 22)"/>`,
+  // 2: Gabel – Y-förmiger Ast
+  `<path d="M40 258 Q42 180 40 130" stroke="#8b5a2b" stroke-width="10" fill="none" stroke-linecap="round"/>
+   <path d="M40 132 Q22 90 14 40" stroke="#8b5a2b" stroke-width="7" fill="none" stroke-linecap="round"/>
+   <path d="M40 132 Q58 90 66 40" stroke="#8b5a2b" stroke-width="7" fill="none" stroke-linecap="round"/>
+   <path d="M40 250 Q42 180 40 135" stroke="#b07a45" stroke-width="3" fill="none"/>
+   <circle cx="14" cy="36" r="7" fill="#6cc24a"/><circle cx="66" cy="36" r="7" fill="#6cc24a"/>
+   <circle cx="20" cy="30" r="5" fill="#8fd36a"/><circle cx="60" cy="30" r="5" fill="#8fd36a"/>`,
+  // 3: Krummer Ast – dunkles Zickzack-Holz mit Pilz
+  `<polyline points="40,258 30,215 50,175 28,135 48,95 34,55 44,25" stroke="#4a2c14" stroke-width="9" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+   <polyline points="40,258 30,215 50,175 28,135 48,95 34,55 44,25" stroke="#6e4422" stroke-width="3" fill="none" stroke-linejoin="round"/>
+   <path d="M52 180 h14" stroke="#efe3c8" stroke-width="5"/>
+   <path d="M52 178 a12 10 0 0 1 22 0 z" fill="#e63946"/>
+   <circle cx="58" cy="173" r="2" fill="#fff"/><circle cx="66" cy="175" r="1.6" fill="#fff"/>
+   <ellipse cx="44" cy="20" rx="8" ry="4" fill="#5fa83a"/>`,
+  // 4: Knüppel – dick, rotbraun, Astlöcher und Moos
+  `<path d="M40 258 L40 50" stroke="#7b2f1a" stroke-width="22" stroke-linecap="round"/>
+   <path d="M34 250 L34 60" stroke="#a24a2c" stroke-width="5" stroke-linecap="round"/>
+   <ellipse cx="44" cy="180" rx="5" ry="7" fill="#3e1a0d"/>
+   <ellipse cx="37" cy="110" rx="4" ry="6" fill="#3e1a0d"/>
+   <path d="M29 258 q11 -18 22 0 z" fill="#4c8f2c"/>
+   <path d="M29 228 q6 -10 12 -2 q4 -8 10 2 z" fill="#5fa83a"/>
+   <path d="M29 50 q11 -14 22 0" stroke="#5fa83a" stroke-width="6" fill="none" stroke-linecap="round"/>`,
+  // 5: Ranke – dünn, grün, mit Spirale und vielen Blättern
+  `<path d="M40 258 C30 200 52 160 38 110 C28 75 52 60 46 40" stroke="#6f8f2a" stroke-width="5" fill="none" stroke-linecap="round"/>
+   <path d="M46 40 c10 -6 8 -20 -2 -20 c-8 0 -9 10 -3 12" stroke="#6f8f2a" stroke-width="4" fill="none" stroke-linecap="round"/>
+   <ellipse cx="52" cy="220" rx="9" ry="4" fill="#7fd35a" transform="rotate(-25 52 220)"/>
+   <ellipse cx="28" cy="180" rx="9" ry="4" fill="#5fa83a" transform="rotate(25 28 180)"/>
+   <ellipse cx="54" cy="140" rx="9" ry="4" fill="#7fd35a" transform="rotate(-25 54 140)"/>
+   <ellipse cx="26" cy="100" rx="9" ry="4" fill="#5fa83a" transform="rotate(25 26 100)"/>
+   <ellipse cx="56" cy="66" rx="9" ry="4" fill="#7fd35a" transform="rotate(-25 56 66)"/>`,
+];
+
+function stickSVG(i) {
+  return `<svg viewBox="0 0 80 260" aria-hidden="true">${STICK_ART[i]}</svg>`;
+}
+
+function triggerBonus(win) {
+  setAuto(false);
+  state.bonusPending = true;
+  state.bonusCount++;
+  state.sinceBonus = 0;
+  setMsg(`🌳 3× STOCKMANN: +${money(win)} & BONUS! 🌳`);
+  showCelebration(win, 'BONUS GEWONNEN!');
+  updateUI();
+
+  const prizes = shuffle(STICK_PRIZES.map((p) => ({ ...p })));
+  const box = $('sticks');
+  box.innerHTML = '';
+  prizes.forEach((p, i) => {
+    const b = document.createElement('button');
+    b.className = 'stick';
+    b.innerHTML = `${stickSVG(i)}<div class="num">${i + 1}</div><div class="stick-name">${STICK_NAMES[i]}</div>
+      <div class="prize"><b>×${p.mult}</b>${p.spins} Freispiele</div>`;
+    b.addEventListener('click', () => pickStick(i, prizes, win));
+    box.appendChild(b);
+  });
+  $('bonusText').textContent = 'Bonusspiel! Wähle einen der 5 Stöcke 🌿';
+  $('startFsBtn').classList.add('hidden');
+  // erst die Gewinn-Animation zeigen, dann die Stock-Auswahl
+  setTimeout(() => $('bonusOverlay').classList.add('show'), 2900);
+}
+
+function pickStick(index, prizes, triggerWin) {
+  const buttons = [...document.querySelectorAll('.stick')];
+  buttons.forEach((b) => (b.disabled = true));
+  const chosen = prizes[index];
+  buttons[index].classList.add('picked', 'revealed');
+  sound.win();
+
+  setTimeout(() => {
+    buttons.forEach((b, i) => { if (i !== index) b.classList.add('revealed', 'other'); });
+    $('bonusText').innerHTML = `${STICK_NAMES[index]}: <b>${chosen.spins} Freispiele</b> mit <b>×${chosen.mult}</b> Multiplikator!`;
+    const btn = $('startFsBtn');
+    btn.classList.remove('hidden');
+    btn.onclick = () => {
+      $('bonusOverlay').classList.remove('show');
+      // won = Gewinn aus den Freispielen, triggerWin = die 10 $ vom Auslösen
+      state.freeSpins = { left: chosen.spins, total: chosen.spins, mult: chosen.mult, won: 0, triggerWin };
+      state.bonusPending = false;
+      clearHighlights();
+      updateUI();
+      setTimeout(spin, 500);
+    };
+  }, 900);
+}
+
+function endFreeSpins() {
+  const fs = state.freeSpins;
+  state.freeSpins = null;
+  clearHighlights();
+  updateUI();
+  const total = cents(fs.triggerWin + fs.won);
+  $('lastWin').textContent = money(total);
+  setMsg(`Bonus beendet: +${money(total)} 🌳`);
+  showBonusWin(fs, total);
+}
+
+// ======================================================
+//  Kleine Animation: Bonus ausgelöst
+// ======================================================
+function showCelebration(win, title) {
+  const el = $('retrigger');
+  $('rtTitle').textContent = title;
+  $('rtWin').textContent = '+' + money(win);
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  sound.bonus();
+  const items = ['🌿', '🍃', '✨', '🌱'];
+  for (let i = 0; i < 24; i++) {
+    const f = document.createElement('div');
+    f.className = 'falling';
+    f.textContent = items[i % items.length];
+    f.style.left = Math.random() * 100 + 'vw';
+    f.style.animationDuration = 1.5 + Math.random() * 1.2 + 's';
+    f.style.animationDelay = Math.random() * .4 + 's';
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), 3500);
+  }
+}
+
+// ======================================================
+//  Gewinn-Show am Ende des Bonus
+// ======================================================
+// Ab welchem Betrag (× Einsatz) welche Stufe erscheint
+const WIN_TIERS = [
+  { from: 0,   text: 'GEWINN!' },
+  { from: 15,  text: 'BIG WIN!' },
+  { from: 30,  text: 'MEGA WIN!' },
+  { from: 60,  text: 'EPIC WIN!' },
+  { from: 120, text: 'STOCKMANN-JACKPOT!' },
+];
+const PARTICLES = ['💰', '🍃', '🌰', '🍂', '✨', '🌿', '🪙'];
+
+function tierIndex(amount) {
+  let idx = 0;
+  WIN_TIERS.forEach((t, i) => { if (amount >= t.from * BET) idx = i; });
+  return idx;
+}
+
+function burst(container, count) {
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('span');
+    p.className = 'ws-particle';
+    p.textContent = PARTICLES[Math.floor(Math.random() * PARTICLES.length)];
+    p.style.setProperty('--dx', (Math.random() * 90 - 45) + 'vw');
+    p.style.setProperty('--dy', -(25 + Math.random() * 40) + 'vh');
+    p.style.setProperty('--dur', (1.6 + Math.random() * 1.4) + 's');
+    p.style.fontSize = (20 + Math.random() * 26) + 'px';
+    container.appendChild(p);
+    setTimeout(() => p.remove(), 3200);
+  }
+}
+
+function showBonusWin(fs, total) {
+  const el = $('winShow');
+  const tierEl = $('wsTier');
+  const amountEl = $('wsAmount');
+  const finalTier = tierIndex(total);
+  // Je größer der Gewinn, desto länger wird gezählt (2,5 bis 6,5 Sekunden)
+  const duration = 2500 + finalTier * 1000;
+
+  let currentTier = 0;
+  tierEl.textContent = WIN_TIERS[0].text;
+  amountEl.textContent = money(0, true);
+  $('wsBreakdown').innerHTML =
+    `3× Stockmann: ${money(fs.triggerWin)} &nbsp;+&nbsp; ${fs.total} Freispiele (×${fs.mult}): ${money(fs.won)}`;
+  el.classList.remove('done');
+  el.classList.add('show', 'counting');
+
+  const start = performance.now();
+  let lastTick = 0;
+  let finished = false;
+  const fountain = setInterval(() => burst(el, 3), 110);
+
+  function setTier(i) {
+    currentTier = i;
+    tierEl.textContent = WIN_TIERS[i].text;
+    tierEl.classList.remove('pop');
+    void tierEl.offsetWidth;
+    tierEl.classList.add('pop');
+    burst(el, 18);
+    sound.win();
+  }
+
+  function finish() {
+    if (finished) return;
+    finished = true;
+    clearInterval(fountain);
+    amountEl.textContent = money(total);
+    if (currentTier !== finalTier) setTier(finalTier);
+    el.classList.remove('counting');
+    el.classList.add('done');
+    burst(el, 70);
+    sound.fanfare();
+    const content = el.querySelector('.ws-content');
+    content.classList.remove('shake');
+    void content.offsetWidth;
+    content.classList.add('shake');
+  }
+
+  function frame(now) {
+    if (finished) return;
+    const t = Math.min(1, (now - start) / duration);
+    const value = total * (1 - Math.pow(1 - t, 2)); // am Ende langsamer werden
+    amountEl.textContent = money(value, true);
+    const tier = tierIndex(value);
+    if (tier > currentTier) setTier(tier);
+    if (now - lastTick > 90) { sound.tick(t); lastTick = now; }
+    if (t < 1) requestAnimationFrame(frame);
+    else finish();
+  }
+  requestAnimationFrame(frame);
+
+  // Klick während des Zählens: direkt zum Ende springen
+  el.onclick = (e) => { if (!finished && e.target.id !== 'wsBtn') finish(); };
+  $('wsBtn').onclick = (e) => {
+    e.stopPropagation();
+    el.classList.remove('show', 'done');
+  };
+}
+
+function gameOver() {
+  $('infoTitle').textContent = 'DAS HOLZ IST ALLE';
+  $('infoText').innerHTML = `Dein Guthaben ist aufgebraucht.<br>Du hast ${state.spins} Mal gedreht.`;
+  $('infoBtn').textContent = `NEUES SPIEL (${money(START_BALANCE)})`;
+  $('infoBtn').onclick = () => {
+    Object.assign(state, { balance: START_BALANCE, spins: 0, sinceBonus: 0, bonusCount: 0 });
+    $('lastWin').textContent = '$0';
+    setMsg('Neues Spiel – viel Glück! 🌲');
+    $('infoOverlay').classList.remove('show');
+    updateUI();
+  };
+  $('infoOverlay').classList.add('show');
+}
+
+// ======================================================
+//  Großer Gewinn mit Blätterregen
+// ======================================================
+function bigWin(amount, title = 'BIG WIN!') {
+  const el = $('bigwin');
+  el.innerHTML = `${title}<br>${money(amount)}`;
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  sound.bigwin();
+  const items = ['🍃', '🍂', '🌿', '💰', '🌰'];
+  for (let i = 0; i < 40; i++) {
+    const f = document.createElement('div');
+    f.className = 'falling';
+    f.textContent = items[i % items.length];
+    f.style.left = Math.random() * 100 + 'vw';
+    f.style.animationDuration = 1.8 + Math.random() * 1.8 + 's';
+    f.style.animationDelay = Math.random() * .6 + 's';
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), 4500);
+  }
+}
+
+// ======================================================
+//  Anzeige
+// ======================================================
+function setMsg(t) { $('msg').textContent = t; }
+
+// Auf ganze Cent runden, damit keine Kommazahlen-Fehler entstehen
+function cents(v) { return Math.round(v * 100) / 100; }
+// Deutsches Format mit Tausenderpunkt: $10.220 – mit Cent: $999,50
+function money(v, alwaysCents = false) {
+  const digits = alwaysCents || !Number.isInteger(v) ? 2 : 0;
+  return '$' + v.toLocaleString('de-DE', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+
+function updateUI() {
+  $('balance').textContent = money(state.balance);
+  $('spinCount').textContent = state.spins;
+  $('sinceBonus').textContent = state.sinceBonus;
+  $('bonusCount').textContent = state.bonusCount;
+
+  const fs = state.freeSpins;
+  $('spinBtn').disabled = state.spinning || state.bonusPending || !!fs;
+  $('autoBtn').disabled = state.bonusPending || !!fs;
+  const banner = $('fsBanner');
+  if (fs) {
+    banner.classList.add('show');
+    const current = fs.total - fs.left;
+    $('fsTitle').textContent = `FREISPIEL ${current} / ${fs.total}`;
+    $('fsInfo').textContent = `Multiplikator ×${fs.mult} · Bonusgewinn: ${money(cents(fs.triggerWin + fs.won))}`;
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+function setAuto(on) {
+  state.auto = on;
+  $('autoBtn').classList.toggle('on', on);
+}
+
+function buildPaytable() {
+  const icon = (s) => (s === 'face' ? '<div class="faceimg"></div>' : s === 'wild' ? WILD_SVG : SYMBOLS[s].emoji);
+  const rows = [
+    [['face', 'face', 'face'], money(PAY_3_FACE * BET) + ' + BONUS'],
+    [['wild', 'wild', 'wild'], money(PAY_3.wild * BET)],
+    [['rocket', 'rocket', 'rocket'], money(PAY_3.rocket * BET)],
+    [['stamm', 'stamm', 'stamm'], money(PAY_3.stamm * BET)],
+    [['tanne', 'tanne', 'tanne'], money(PAY_3.tanne * BET)],
+    [['pilz', 'pilz', 'pilz'], money(PAY_3.pilz * BET)],
+    [['eichel', 'eichel', 'eichel'], money(PAY_3.eichel * BET)],
+    [['blatt', 'blatt', 'blatt'], money(PAY_3.blatt * BET)],
+  ];
+  $('ptGrid').innerHTML = rows.map(([syms, pay, label]) =>
+    `<div class="pt-syms">${syms.map(icon).join('')}${label ? `<small style="font-size:13px;font-weight:800;margin-left:6px">${label}</small>` : ''}</div><div class="pt-pay">${pay}</div>`
+  ).join('') + `<div class="pt-note">
+    Gewertet wird nur die rote Gewinnlinie in der Mitte.<br>
+    <b>Joker (WILD)</b> ersetzt jedes Symbol außer Stockmann.<br>
+    <b>Bonus:</b> 3× Stockmann → wähle einen von 5 Stöcken. Dahinter verstecken sich (zufällig gemischt):
+    ${STICK_PRIZES.map((p) => `×${p.mult} & ${p.spins}`).join(', ')} Freispiele.
+    In den Freispielen werden alle Gewinne multipliziert. Dort gibt es keinen Stockmann – dafür viel mehr Joker.
+  </div>`;
+}
+
+// ======================================================
+//  Gesicht des Freundes
+// ======================================================
+function setFace(url) {
+  document.documentElement.style.setProperty('--face', `url("${url}")`);
+}
+
+
+// ======================================================
+//  Töne (werden im Browser erzeugt, keine Dateien nötig)
+// ======================================================
+const sound = (() => {
+  let ctx = null;
+  let on = true;
+  try { on = localStorage.getItem(SOUND_STORAGE_KEY) !== 'off'; } catch (e) {}
+
+  function tone(freq, dur, { type = 'triangle', vol = 0.15, delay = 0 } = {}) {
+    if (!on) return;
+    try {
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      const t = ctx.currentTime + delay;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.connect(g).connect(ctx.destination);
+      o.start(t);
+      o.stop(t + dur + 0.02);
+    } catch (e) {}
+  }
+  const seq = (notes, step, opts) => notes.forEach((f, i) => tone(f, step * 1.6, { ...opts, delay: i * step }));
+
+  return {
+    get on() { return on; },
+    toggle() {
+      on = !on;
+      try { localStorage.setItem(SOUND_STORAGE_KEY, on ? 'on' : 'off'); } catch (e) {}
+      return on;
+    },
+    start: () => tone(180, 0.12, { type: 'square', vol: 0.05 }),
+    stop: () => tone(140, 0.08, { type: 'square', vol: 0.08 }),
+    tease: () => seq([330, 349, 370, 392, 415, 440, 466, 494, 523, 554, 587, 622], 0.25, { type: 'sawtooth', vol: 0.04 }),
+    // Herzschlag, der immer schneller wird
+    heartbeat: (seconds) => {
+      let t = 0, gap = 0.55;
+      while (t < seconds) {
+        tone(70, 0.14, { type: 'sine', vol: 0.4, delay: t });
+        tone(58, 0.12, { type: 'sine', vol: 0.3, delay: t + 0.13 });
+        t += gap;
+        gap = Math.max(0.22, gap * 0.85);
+      }
+    },
+    miss: () => seq([392, 349, 311, 262], 0.14, { type: 'triangle', vol: 0.12 }),
+    win: () => seq([523, 659, 784], 0.08),
+    bigwin: () => seq([523, 659, 784, 1047, 784, 1047, 1319], 0.1, { vol: 0.18 }),
+    tick: (progress) => tone(330 + 900 * progress, 0.05, { type: 'square', vol: 0.035 }),
+    fanfare: () => seq([523, 659, 784, 1047, 1319, 1047, 1319, 1568, 2093], 0.09, { vol: 0.2 }),
+    bonus: () => seq([392, 523, 659, 784, 659, 784, 1047, 1319], 0.11, { type: 'square', vol: 0.08 }),
+  };
+})();
+
+function updateSoundBtn() {
+  $('soundBtn').innerHTML = `<span class="ico">${sound.on ? '🔊' : '🔇'}</span>Ton`;
+}
+
+// ======================================================
+//  Start
+// ======================================================
+$('spinBtn').addEventListener('click', () => spin());
+$('autoBtn').addEventListener('click', () => {
+  setAuto(!state.auto);
+  if (state.auto && !state.spinning) spin();
+});
+$('soundBtn').addEventListener('click', () => { sound.toggle(); updateSoundBtn(); });
+document.addEventListener('keydown', (e) => {
+  if (e.code !== 'Space') return;
+  if (document.querySelector('.overlay.show, .winshow.show')) return;
+  e.preventDefault();
+  if (!state.freeSpins) spin();
+});
+
+// Glühwürmchen
+for (let i = 0; i < 18; i++) {
+  const f = document.createElement('div');
+  f.className = 'fly';
+  f.style.left = Math.random() * 100 + 'vw';
+  f.style.top = Math.random() * 100 + 'vh';
+  f.style.animationDelay = -Math.random() * 9 + 's';
+  f.style.animationDuration = 7 + Math.random() * 6 + 's';
+  document.body.appendChild(f);
+}
+
+setFace(FACE_IMAGE);
+reels.forEach(drawReel);
+buildPaytable();
+updateSoundBtn();
+updateUI();
+</script>
+</body>
+</html>
